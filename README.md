@@ -1,4 +1,4 @@
-# WeakPass
+# PassForge
 
 密码学安全随机密码生成器，支持 Web UI 一键生成。
 
@@ -49,7 +49,7 @@ start.bat
 ## 项目结构
 
 ```
-weakpass/
+PassForge/
 ├── generator.py      # 核心生成逻辑
 ├── app.py            # Flask Web 服务
 ├── start.bat         # 双击启动
