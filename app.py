@@ -2,6 +2,7 @@ import os
 import webbrowser
 import threading
 import socket
+import time
 
 from flask import Flask, render_template, request, jsonify
 from generator import ALLOWED_LENGTHS, batch_generate, password_info
@@ -50,6 +51,28 @@ def run_flask():
     app.run(host="127.0.0.1", port=PORT, debug=False)
 
 
+def wait_for_server(timeout=10.0, interval=0.1):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if is_port_in_use(PORT):
+            return True
+        time.sleep(interval)
+    return False
+
+
+def show_error(message: str):
+    try:
+        import tkinter as tk
+        from tkinter import messagebox
+
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showerror("WeakPass", message)
+        root.destroy()
+    except Exception:
+        print(message)
+
+
 def run_control_window():
     """Small tkinter window as control panel"""
     import tkinter as tk
@@ -95,14 +118,17 @@ def is_port_in_use(port):
 
 if __name__ == "__main__":
     if is_port_in_use(PORT):
-        print(f"Port {PORT} is already in use")
+        show_error(f"Port {PORT} is already in use.\nPlease close the other program and try again.")
         raise SystemExit(1)
-
-    threading.Timer(1.5, open_browser).start()
 
     try:
         flask_thread = threading.Thread(target=run_flask, daemon=True)
         flask_thread.start()
+        if wait_for_server():
+            open_browser()
+        else:
+            show_error(f"Failed to start WeakPass at {URL}")
+            raise SystemExit(1)
         run_control_window()
     except Exception:
         print(f"WeakPass running at {URL}")
