@@ -170,3 +170,24 @@ h1 {
     margin-left: auto;
     color: #444;
 }
+
+.footer {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.btn-exit {
+    background: transparent;
+    color: #666;
+    border: 1px solid #30363d;
+    padding: 6px 20px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-exit:hover {
+    color: #e74c3c;
+    border-color: #e74c3c;
+}

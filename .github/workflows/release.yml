@@ -23,7 +23,7 @@ jobs:
       - name: Build exe
         run: |
           uv pip install pyinstaller
-          uv run pyinstaller --onefile --noconsole --name WeakPass --add-data "templates;templates" --add-data "static;static" --hidden-import flask --hidden-import jinja2 --hidden-import werkzeug app.py
+          uv run pyinstaller --onefile --noconsole --name WeakPass --add-data "templates;templates" --add-data "static;static" --hidden-import flask --hidden-import jinja2 --hidden-import werkzeug --hidden-import tkinter app.py
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

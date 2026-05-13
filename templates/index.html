@@ -31,6 +31,10 @@
         </div>
 
         <div class="results" id="results"></div>
+
+        <div class="footer">
+            <button class="btn-exit" id="exitBtn">退出程序</button>
+        </div>
     </div>
 
     <script>
@@ -119,6 +123,14 @@
         }
 
         generate();
+
+        document.getElementById('exitBtn').addEventListener('click', async () => {
+            if (!confirm('确定退出 WeakPass？')) return;
+            try {
+                await fetch('/api/shutdown', { method: 'POST' });
+            } catch {}
+            document.body.innerHTML = '<div style="text-align:center;padding:100px;color:#666;font-family:monospace"><h2>WeakPass 已退出</h2><p>可以关闭此页面</p></div>';
+        });
     </script>
 </body>
 </html>
