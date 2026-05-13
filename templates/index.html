@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeakPass - 密码生成器</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>WeakPass</h1>
+        <p class="subtitle">密码学安全随机密码生成器</p>
+
+        <div class="controls">
+            <div class="length-selector">
+                <label>密码长度</label>
+                <div class="btn-group" id="lengthGroup">
+                    {% for len in lengths %}
+                    <button class="btn-length {% if len == 16 %}active{% endif %}"
+                            data-length="{{ len }}">{{ len }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="count-selector">
+                <label for="count">生成数量</label>
+                <input type="number" id="count" value="1" min="1" max="50">
+            </div>
+
+            <button class="btn-generate" id="generateBtn">生成密码</button>
+        </div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        let selectedLength = 16;
+
+        document.querySelectorAll('.btn-length').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-length').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedLength = parseInt(btn.dataset.length);
+            });
+        });
+
+        document.getElementById('generateBtn').addEventListener('click', generate);
+        document.getElementById('count').addEventListener('keydown', e => {
+            if (e.key === 'Enter') generate();
+        });
+
+        async function generate() {
+            const count = parseInt(document.getElementById('count').value) || 1;
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ length: selectedLength, count })
+                });
+                const data = await resp.json();
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                renderResults(data.passwords);
+            } catch (e) {
+                alert('请求失败: ' + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        const strengthMap = {
+            '弱':     { color: '#e74c3c', label: '弱' },
+            '中等':   { color: '#f39c12', label: '中等' },
+            '强':     { color: '#27ae60', label: '强' },
+            '非常强': { color: '#00bcd4', label: '非常强' }
+        };
+
+        function renderResults(passwords) {
+            const container = document.getElementById('results');
+            container.innerHTML = passwords.map(p => {
+                const s = strengthMap[p.strength] || { color: '#888', label: p.strength };
+                return `
+                    <div class="password-card">
+                        <div class="password-text" onclick="copyText(this)">${escapeHtml(p.password)}</div>
+                        <div class="password-meta">
+                            <span class="strength" style="color:${s.color}">${s.label}</span>
+                            <span class="entropy">${p.entropy} 位熵值</span>
+                            <span class="copy-hint">点击复制</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function copyText(el) {
+            try {
+                await navigator.clipboard.writeText(el.textContent);
+                el.classList.add('copied');
+                setTimeout(() => el.classList.remove('copied'), 1000);
+            } catch {
+                const range = document.createRange();
+                range.selectNode(el);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand('copy');
+                window.getSelection().removeAllRanges();
+            }
+        }
+
+        generate();
+    </script>
+</body>
+</html>

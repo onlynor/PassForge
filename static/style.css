@@ -1,0 +1,172 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0d1117;
+    color: #e6edf3;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.container {
+    max-width: 720px;
+    width: 100%;
+}
+
+h1 {
+    font-size: 2.5rem;
+    letter-spacing: 4px;
+    text-align: center;
+    color: #00bcd4;
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 40px;
+}
+
+.controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+}
+
+.length-selector label,
+.count-selector label {
+    display: block;
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-group {
+    display: flex;
+    gap: 4px;
+}
+
+.btn-length {
+    background: #161b22;
+    color: #888;
+    border: 1px solid #30363d;
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-length:hover {
+    color: #e6edf3;
+    border-color: #00bcd4;
+}
+
+.btn-length.active {
+    background: #00bcd4;
+    color: #0d1117;
+    border-color: #00bcd4;
+    font-weight: bold;
+}
+
+.count-selector input {
+    background: #161b22;
+    color: #e6edf3;
+    border: 1px solid #30363d;
+    padding: 8px 12px;
+    width: 70px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.count-selector input:focus {
+    border-color: #00bcd4;
+}
+
+.btn-generate {
+    background: #238636;
+    color: #fff;
+    border: none;
+    padding: 9px 28px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: background 0.15s;
+}
+
+.btn-generate:hover {
+    background: #2ea043;
+}
+
+.btn-generate:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.password-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    padding: 14px 18px;
+    transition: border-color 0.15s;
+}
+
+.password-card:hover {
+    border-color: #00bcd4;
+}
+
+.password-text {
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    word-break: break-all;
+    cursor: pointer;
+    padding: 4px 0;
+    position: relative;
+    transition: color 0.2s;
+}
+
+.password-text:hover {
+    color: #00bcd4;
+}
+
+.password-text.copied::after {
+    content: 'Copied!';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #27ae60;
+    font-size: 0.8rem;
+}
+
+.password-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.copy-hint {
+    margin-left: auto;
+    color: #444;
+}
