@@ -1,4 +1,3 @@
-import sys
 import os
 import webbrowser
 import threading
@@ -20,9 +19,13 @@ def index():
 
 @app.route("/api/generate", methods=["POST"])
 def api_generate():
-    data = request.get_json(force=True)
-    length = data.get("length", 16)
-    count = data.get("count", 1)
+    data = request.get_json(silent=True) or {}
+
+    try:
+        length = int(data.get("length", 16))
+        count = int(data.get("count", 1))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Length and count must be integers"}), 400
 
     if length not in ALLOWED_LENGTHS:
         return jsonify({"error": f"Length must be one of {ALLOWED_LENGTHS}"}), 400
@@ -91,15 +94,15 @@ def is_port_in_use(port):
 
 
 if __name__ == "__main__":
-    # Start Flask in background
-    flask_thread = threading.Thread(target=run_flask, daemon=True)
-    flask_thread.start()
+    if is_port_in_use(PORT):
+        print(f"Port {PORT} is already in use")
+        raise SystemExit(1)
 
-    # Open browser after a short delay
     threading.Timer(1.5, open_browser).start()
 
-    # Try control window, fallback to console
     try:
+        flask_thread = threading.Thread(target=run_flask, daemon=True)
+        flask_thread.start()
         run_control_window()
     except Exception:
         print(f"WeakPass running at {URL}")

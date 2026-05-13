@@ -38,7 +38,7 @@ uv run python app.py
 start.bat
 ```
 
-浏览器自动打开 `http://127.0.0.1:8089`。
+浏览器自动打开 `http://127.0.0.1:18080`。
 
 ## 打包 exe
 
