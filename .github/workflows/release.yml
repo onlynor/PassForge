@@ -23,10 +23,10 @@ jobs:
       - name: Build exe
         run: |
           uv pip install pyinstaller
-          uv run pyinstaller --onefile --noconsole --name WeakPass --add-data "templates;templates" --add-data "static;static" --hidden-import flask --hidden-import jinja2 --hidden-import werkzeug --hidden-import tkinter app.py
+          uv run python -m PyInstaller --onefile --noconsole --name PassForge --add-data "templates;templates" --add-data "static;static" --add-data "logo;logo" --hidden-import flask --hidden-import jinja2 --hidden-import werkzeug --hidden-import tkinter --hidden-import pystray._win32 app.py
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/WeakPass.exe
+          files: dist/PassForge.exe
           generate_release_notes: true

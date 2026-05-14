@@ -3,11 +3,13 @@ import string
 import math
 
 ALLOWED_LENGTHS = (8, 16, 32, 64)
+JWT_DEFAULT_LENGTH = 64
 
 UPPERCASE = string.ascii_uppercase
 LOWERCASE = string.ascii_lowercase
 DIGITS = string.digits
 SPECIAL = "!@#$%^&*()-_=+[]{}|;:,.<>?"
+JWT_CHARS = UPPERCASE + LOWERCASE + DIGITS + "-_"
 
 ALL_CHARS = UPPERCASE + LOWERCASE + DIGITS + SPECIAL
 
@@ -37,7 +39,25 @@ def batch_generate(length: int = 16, count: int = 1) -> list[str]:
     return [generate_password(length) for _ in range(count)]
 
 
-def calc_entropy(password: str) -> float:
+def generate_jwt_password(length: int = JWT_DEFAULT_LENGTH) -> str:
+    if length < 16:
+        raise ValueError("JWT password length must be at least 16")
+    password = [
+        secrets.choice(UPPERCASE),
+        secrets.choice(LOWERCASE),
+        secrets.choice(DIGITS),
+    ]
+    for _ in range(length - 3):
+        password.append(secrets.choice(JWT_CHARS))
+    secrets.SystemRandom().shuffle(password)
+    return "".join(password)
+
+
+def batch_generate_jwt(count: int = 1, length: int = JWT_DEFAULT_LENGTH) -> list[str]:
+    return [generate_jwt_password(length) for _ in range(count)]
+
+
+def calc_entropy(password: str, is_jwt: bool = False) -> float:
     charset_size = 0
     if any(c in UPPERCASE for c in password):
         charset_size += len(UPPERCASE)
@@ -45,7 +65,9 @@ def calc_entropy(password: str) -> float:
         charset_size += len(LOWERCASE)
     if any(c in DIGITS for c in password):
         charset_size += len(DIGITS)
-    if any(c in SPECIAL for c in password):
+    if is_jwt:
+        charset_size += 2  # - and _
+    elif any(c in SPECIAL for c in password):
         charset_size += len(SPECIAL)
     if charset_size == 0:
         return 0.0
@@ -63,8 +85,8 @@ def strength_label(entropy: float) -> str:
         return "非常强"
 
 
-def password_info(password: str) -> dict:
-    entropy = calc_entropy(password)
+def password_info(password: str, is_jwt: bool = False) -> dict:
+    entropy = calc_entropy(password, is_jwt)
     return {
         "password": password,
         "length": len(password),

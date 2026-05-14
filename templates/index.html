@@ -3,102 +3,484 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeakPass - 密码生成器</title>
+    <title>PassForge - 密码生成器</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>WeakPass</h1>
+        <div class="header">
+            <h1>PassForge</h1>
+            <a href="https://github.com/onlynor/PassForge" target="_blank" class="github-link" title="GitHub">
+                <svg viewBox="0 0 16 16" width="24" height="24" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+            </a>
+        </div>
         <p class="subtitle">密码学安全随机密码生成器</p>
 
         <div class="controls">
-            <div class="length-selector">
-                <label>密码长度</label>
-                <div class="btn-group" id="lengthGroup">
-                    {% for len in lengths %}
-                    <button class="btn-length {% if len == 16 %}active{% endif %}"
-                            data-length="{{ len }}">{{ len }}</button>
-                    {% endfor %}
+            <div class="type-selector">
+                <label>密码类型</label>
+                <div class="btn-group" id="typeGroup">
+                    <button class="btn-type active" data-type="standard">标准密码</button>
+                    <button class="btn-type" data-type="passphrase">短语密码</button>
+                    <button class="btn-type" data-type="jwt-key">JWT 密钥</button>
+                </div>
+            </div>
+
+            <div id="jwtKeyOptions" style="display:none">
+                <label>签名算法</label>
+                <div class="btn-group">
+                    <button class="btn-algo active" data-algo="HS256">HS256 (32字节)</button>
+                    <button class="btn-algo" data-algo="HS512">HS512 (64字节)</button>
+                </div>
+            </div>
+
+            <div id="passphraseOptions" style="display:none">
+                <div class="length-selector">
+                    <label>
+                        单词数量: <span id="wordCountValue">4</span> 个
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="wordCountSlider" min="4" max="10" value="4" class="slider">
+                        <input type="number" id="wordCountInput" value="4" min="4" max="10" class="length-input">
+                    </div>
+                </div>
+
+                <div class="charset-selector">
+                    <label>分隔符</label>
+                    <div class="btn-group">
+                        <button class="btn-separator active" data-sep="-">连字符 -</button>
+                        <button class="btn-separator" data-sep=".">点 .</button>
+                        <button class="btn-separator" data-sep=" ">空格</button>
+                        <button class="btn-separator" data-sep="">无</button>
+                    </div>
+                </div>
+
+                <div class="options-row">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="cbCapitalize">
+                        <span class="checkmark"></span>
+                        首字母大写
+                    </label>
+                </div>
+            </div>
+
+            <div id="standardOptions">
+                <div class="length-selector">
+                    <label>
+                        密码长度: <span id="lengthValue">16</span> 位
+                    </label>
+                    <div class="slider-container">
+                        <input type="range" id="lengthSlider" min="4" max="128" value="16" class="slider">
+                        <input type="number" id="lengthInput" value="16" min="4" max="128" class="length-input">
+                    </div>
+                </div>
+
+                <div class="policy-selector">
+                    <label>密码策略</label>
+                    <select id="policySelect" class="policy-select">
+                        <option value="none">无策略约束</option>
+                        <option value="standard">标准（大小写+数字+符号）</option>
+                        <option value="letters">仅字母</option>
+                        <option value="pin">纯数字 PIN</option>
+                    </select>
+                </div>
+
+                <div class="charset-selector">
+                    <label>字符集</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="cbUppercase" checked>
+                            <span class="checkmark"></span>
+                            大写 A-Z
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="cbLowercase" checked>
+                            <span class="checkmark"></span>
+                            小写 a-z
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="cbDigits" checked>
+                            <span class="checkmark"></span>
+                            数字 0-9
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="cbSpecial" checked>
+                            <span class="checkmark"></span>
+                            特殊符号
+                        </label>
+                    </div>
+                </div>
+
+                <div class="options-row">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="cbExcludeConfusing">
+                        <span class="checkmark"></span>
+                        排除易混淆字符 (0O1lI)
+                    </label>
                 </div>
             </div>
 
             <div class="count-selector">
                 <label for="count">生成数量</label>
-                <input type="number" id="count" value="1" min="1" max="50">
+                <div class="count-input-wrapper">
+                    <input type="number" id="count" value="1" min="1" max="500" step="1">
+                    <div class="count-hint">范围 1-500</div>
+                </div>
             </div>
 
             <button class="btn-generate" id="generateBtn">生成密码</button>
         </div>
 
+        <div class="strength-preview" id="strengthPreview">
+            <div class="strength-info">
+                <span class="strength-label" id="strengthLabel">强度: 中等</span>
+                <span class="strength-entropy" id="strengthEntropy">~106 bit</span>
+            </div>
+            <div class="strength-bar-container">
+                <div class="strength-bar" id="strengthBar" style="width:50%;background:#f39c12"></div>
+            </div>
+        </div>
+
         <div class="results" id="results"></div>
 
+        <div class="batch-actions" id="batchActions" style="display:none">
+            <button class="btn-copy-all" id="copyAllBtn">复制全部</button>
+            <button class="btn-export" id="exportTxtBtn">导出 TXT</button>
+        </div>
+
         <div class="footer">
+            <a href="https://github.com/onlynor/PassForge" target="_blank" class="footer-link">
+                GitHub
+            </a>
             <button class="btn-exit" id="exitBtn">退出程序</button>
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='wordlist.js') }}"></script>
+    <script src="{{ url_for('static', filename='password-generator.js') }}"></script>
     <script>
-        let selectedLength = 16;
+        let selectedType = 'standard';
+        let selectedAlgo = 'HS256';
+        let selectedSeparator = '-';
 
-        document.querySelectorAll('.btn-length').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.btn-length').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedLength = parseInt(btn.dataset.length);
-            });
+        const typeGroup = document.getElementById('typeGroup');
+        const standardOptions = document.getElementById('standardOptions');
+        const jwtKeyOptions = document.getElementById('jwtKeyOptions');
+        const passphraseOptions = document.getElementById('passphraseOptions');
+        const lengthSlider = document.getElementById('lengthSlider');
+        const lengthInput = document.getElementById('lengthInput');
+        const lengthValue = document.getElementById('lengthValue');
+        const wordCountSlider = document.getElementById('wordCountSlider');
+        const wordCountInput = document.getElementById('wordCountInput');
+        const wordCountValue = document.getElementById('wordCountValue');
+        const countInput = document.getElementById('count');
+        const strengthLabel = document.getElementById('strengthLabel');
+        const strengthEntropy = document.getElementById('strengthEntropy');
+        const strengthBar = document.getElementById('strengthBar');
+        const batchActions = document.getElementById('batchActions');
+        const policySelect = document.getElementById('policySelect');
+
+        typeGroup.addEventListener('click', e => {
+            const btn = e.target.closest('.btn-type');
+            if (!btn) return;
+
+            typeGroup.querySelectorAll('.btn-type').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedType = btn.dataset.type;
+
+            standardOptions.style.display = selectedType === 'standard' ? 'block' : 'none';
+            jwtKeyOptions.style.display = selectedType === 'jwt-key' ? 'block' : 'none';
+            passphraseOptions.style.display = selectedType === 'passphrase' ? 'block' : 'none';
+
+            updateStrengthPreview();
         });
 
-        document.getElementById('generateBtn').addEventListener('click', generate);
-        document.getElementById('count').addEventListener('keydown', e => {
+        jwtKeyOptions.addEventListener('click', e => {
+            const btn = e.target.closest('.btn-algo');
+            if (!btn) return;
+
+            jwtKeyOptions.querySelectorAll('.btn-algo').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedAlgo = btn.dataset.algo;
+        });
+
+        passphraseOptions.addEventListener('click', e => {
+            const btn = e.target.closest('.btn-separator');
+            if (!btn) return;
+
+            passphraseOptions.querySelectorAll('.btn-separator').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedSeparator = btn.dataset.sep;
+        });
+
+        lengthSlider.addEventListener('input', () => {
+            const val = lengthSlider.value;
+            lengthInput.value = val;
+            lengthValue.textContent = val;
+            updateStrengthPreview();
+        });
+
+        lengthInput.addEventListener('input', () => {
+            let val = parseInt(lengthInput.value);
+            if (isNaN(val)) return;
+            if (val < 4) val = 4;
+            if (val > 128) val = 128;
+            lengthSlider.value = val;
+            lengthValue.textContent = val;
+            updateStrengthPreview();
+        });
+
+        lengthInput.addEventListener('blur', () => {
+            let val = parseInt(lengthInput.value);
+            if (isNaN(val) || val < 4) val = 4;
+            if (val > 128) val = 128;
+            lengthInput.value = val;
+            lengthSlider.value = val;
+            lengthValue.textContent = val;
+        });
+
+        wordCountSlider.addEventListener('input', () => {
+            const val = wordCountSlider.value;
+            wordCountInput.value = val;
+            wordCountValue.textContent = val;
+            updateStrengthPreview();
+        });
+
+        wordCountInput.addEventListener('input', () => {
+            let val = parseInt(wordCountInput.value);
+            if (isNaN(val)) return;
+            if (val < 4) val = 4;
+            if (val > 10) val = 10;
+            wordCountSlider.value = val;
+            wordCountValue.textContent = val;
+            updateStrengthPreview();
+        });
+
+        wordCountInput.addEventListener('blur', () => {
+            let val = parseInt(wordCountInput.value);
+            if (isNaN(val) || val < 4) val = 4;
+            if (val > 10) val = 10;
+            wordCountInput.value = val;
+            wordCountSlider.value = val;
+            wordCountValue.textContent = val;
+        });
+
+        document.querySelectorAll('#standardOptions input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', updateStrengthPreview);
+        });
+
+        policySelect.addEventListener('change', () => {
+            const policy = policySelect.value;
+            if (policy === 'pin') {
+                document.getElementById('cbUppercase').checked = false;
+                document.getElementById('cbLowercase').checked = false;
+                document.getElementById('cbDigits').checked = true;
+                document.getElementById('cbSpecial').checked = false;
+            } else if (policy === 'letters') {
+                document.getElementById('cbUppercase').checked = true;
+                document.getElementById('cbLowercase').checked = true;
+                document.getElementById('cbDigits').checked = false;
+                document.getElementById('cbSpecial').checked = false;
+            } else if (policy === 'standard') {
+                document.getElementById('cbUppercase').checked = true;
+                document.getElementById('cbLowercase').checked = true;
+                document.getElementById('cbDigits').checked = true;
+                document.getElementById('cbSpecial').checked = true;
+            }
+            updateStrengthPreview();
+        });
+
+        countInput.addEventListener('keydown', e => {
             if (e.key === 'Enter') generate();
         });
+        countInput.addEventListener('blur', () => {
+            let val = parseInt(countInput.value);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > 500) val = 500;
+            countInput.value = val;
+        });
 
-        async function generate() {
-            const count = parseInt(document.getElementById('count').value) || 1;
-            const btn = document.getElementById('generateBtn');
-            btn.disabled = true;
+        function updateStrengthPreview() {
+            if (selectedType === 'jwt-key') {
+                const bits = selectedAlgo === 'HS512' ? 512 : 256;
+                strengthLabel.textContent = '强度: 极高';
+                strengthEntropy.textContent = `~${bits} bit`;
+                strengthBar.style.width = '100%';
+                strengthBar.style.background = '#00bcd4';
+                return;
+            }
+
+            if (selectedType === 'passphrase') {
+                const wordCount = parseInt(wordCountSlider.value) || 4;
+                const entropy = passwordGenerator.passphraseEntropy(wordCount);
+                const strength = passwordGenerator.strengthLabel(entropy);
+
+                strengthLabel.textContent = `强度: ${strength.label}`;
+                strengthEntropy.textContent = `~${Math.round(entropy)} bit`;
+
+                const percent = Math.min(100, (entropy / 128) * 100);
+                strengthBar.style.width = `${percent}%`;
+                strengthBar.style.background = strength.color;
+                return;
+            }
+
+            const options = getCharOptions();
+            const length = parseInt(lengthSlider.value) || 16;
+            const charsetSize = passwordGenerator.getCharsetSize(options);
+
+            if (charsetSize === 0) {
+                strengthLabel.textContent = '强度: 无';
+                strengthEntropy.textContent = '请选择字符集';
+                strengthBar.style.width = '0%';
+                return;
+            }
+
+            const entropy = length * Math.log2(charsetSize);
+            const strength = passwordGenerator.strengthLabel(entropy);
+
+            strengthLabel.textContent = `强度: ${strength.label}`;
+            strengthEntropy.textContent = `~${Math.round(entropy)} bit`;
+
+            const percent = Math.min(100, (entropy / 128) * 100);
+            strengthBar.style.width = `${percent}%`;
+            strengthBar.style.background = strength.color;
+        }
+
+        function getCharOptions() {
+            return {
+                uppercase: document.getElementById('cbUppercase').checked,
+                lowercase: document.getElementById('cbLowercase').checked,
+                digits: document.getElementById('cbDigits').checked,
+                special: document.getElementById('cbSpecial').checked,
+                excludeConfusing: document.getElementById('cbExcludeConfusing').checked
+            };
+        }
+
+        function generate() {
+            let count = parseInt(countInput.value);
+            if (isNaN(count) || count < 1) count = 1;
+            if (count > 500) count = 500;
+            countInput.value = count;
+
+            const passwords = [];
 
             try {
-                const resp = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ length: selectedLength, count })
-                });
-                const data = await resp.json();
-                if (data.error) {
-                    alert(data.error);
-                    return;
+                for (let i = 0; i < count; i++) {
+                    let pw;
+                    let info;
+
+                    if (selectedType === 'jwt-key') {
+                        pw = passwordGenerator.generateJWTKey(selectedAlgo);
+                        const bits = selectedAlgo === 'HS512' ? 512 : 256;
+                        const formats = passwordGenerator.getKeyFormats(pw, selectedAlgo);
+                        info = {
+                            password: pw,
+                            length: pw.length,
+                            entropy: bits,
+                            strength: '极高',
+                            strengthColor: '#00bcd4',
+                            isJWTKey: true,
+                            formats
+                        };
+                    } else if (selectedType === 'passphrase') {
+                        const wordCount = parseInt(wordCountSlider.value) || 4;
+                        const capitalize = document.getElementById('cbCapitalize').checked;
+                        pw = passwordGenerator.generatePassphrase(wordCount, {
+                            separator: selectedSeparator,
+                            capitalize
+                        });
+                        const entropy = passwordGenerator.passphraseEntropy(wordCount);
+                        const strength = passwordGenerator.strengthLabel(entropy);
+                        info = {
+                            password: pw,
+                            length: pw.length,
+                            entropy: Math.round(entropy * 10) / 10,
+                            strength: strength.label,
+                            strengthColor: strength.color
+                        };
+                    } else {
+                        const length = parseInt(lengthSlider.value) || 16;
+                        const options = getCharOptions();
+                        const policy = policySelect.value;
+
+                        if (policy && policy !== 'none') {
+                            pw = passwordGenerator.generateWithPolicy(length, policy, options);
+                        } else {
+                            pw = passwordGenerator.generate(length, options);
+                        }
+                        info = passwordGenerator.getPasswordInfo(pw, options);
+                    }
+
+                    passwords.push(info);
                 }
-                renderResults(data.passwords);
+
+                renderResults(passwords);
+                batchActions.style.display = count > 1 ? 'flex' : 'none';
             } catch (e) {
-                alert('请求失败: ' + e.message);
-            } finally {
-                btn.disabled = false;
+                alert(e.message);
             }
         }
 
-        const strengthMap = {
-            '弱':     { color: '#e74c3c', label: '弱' },
-            '中等':   { color: '#f39c12', label: '中等' },
-            '强':     { color: '#27ae60', label: '强' },
-            '非常强': { color: '#00bcd4', label: '非常强' }
-        };
-
         function renderResults(passwords) {
             const container = document.getElementById('results');
-            container.innerHTML = passwords.map(p => {
-                const s = strengthMap[p.strength] || { color: '#888', label: p.strength };
+            container.innerHTML = passwords.map((p, idx) => {
+                if (p.isJWTKey) {
+                    return renderJWTKeyCard(p, idx);
+                }
                 return `
                     <div class="password-card">
                         <div class="password-text" onclick="copyText(this)">${escapeHtml(p.password)}</div>
                         <div class="password-meta">
-                            <span class="strength" style="color:${s.color}">${s.label}</span>
-                            <span class="entropy">${p.entropy} 位熵值</span>
+                            <span class="strength" style="color:${p.strengthColor}">${p.strength}</span>
+                            <span class="entropy">${p.entropy} bit</span>
                             <span class="copy-hint">点击复制</span>
                         </div>
                     </div>
                 `;
             }).join('');
+
+            container.querySelectorAll('.format-tab').forEach(tab => {
+                tab.addEventListener('click', e => {
+                    const card = e.target.closest('.password-card');
+                    const idx = tab.dataset.idx;
+                    const format = tab.dataset.format;
+
+                    card.querySelectorAll('.format-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const content = card.querySelector('.key-format-content');
+                    content.textContent = keyFormatsCache[idx][format];
+                });
+            });
+        }
+
+        let keyFormatsCache = {};
+
+        function renderJWTKeyCard(p, idx) {
+            keyFormatsCache[idx] = p.formats;
+            return `
+                <div class="password-card jwt-key-card">
+                    <div class="format-tabs">
+                        <button class="format-tab active" data-idx="${idx}" data-format="base64url">Base64url</button>
+                        <button class="format-tab" data-idx="${idx}" data-format="hex">Hex</button>
+                    </div>
+                    <div class="key-format-content" onclick="copyText(this)">${escapeHtml(p.formats.base64url)}</div>
+                    <div class="password-meta">
+                        <span class="strength" style="color:${p.strengthColor}">${p.strength}</span>
+                        <span class="entropy">${p.entropy} bit</span>
+                        <div class="copy-dropdown">
+                            <button class="btn-copy-dropdown" onclick="toggleCopyDropdown(event, ${idx})">复制 ▾</button>
+                            <div class="copy-dropdown-menu" id="copyDropdown${idx}">
+                                <button onclick="copyKeyFormat(${idx}, 'raw')">复制</button>
+                                <button onclick="copyKeyFormat(${idx}, 'JWT_SECRET')">JWT_SECRET=</button>
+                                <button onclick="copyKeyFormat(${idx}, 'NEXTAUTH_SECRET')">NEXTAUTH_SECRET=</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         function escapeHtml(text) {
@@ -122,14 +504,77 @@
             }
         }
 
+        function toggleCopyDropdown(e, idx) {
+            e.stopPropagation();
+            const menu = document.getElementById('copyDropdown' + idx);
+            const isOpen = menu.classList.contains('show');
+            document.querySelectorAll('.copy-dropdown-menu.show').forEach(m => m.classList.remove('show'));
+            if (!isOpen) menu.classList.add('show');
+        }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.copy-dropdown-menu.show').forEach(m => m.classList.remove('show'));
+        });
+
+        async function copyKeyFormat(idx, mode) {
+            const formats = keyFormatsCache[idx];
+            const card = document.getElementById('copyDropdown' + idx).closest('.jwt-key-card');
+            const activeTab = card.querySelector('.format-tab.active');
+            const currentFormat = activeTab ? activeTab.dataset.format : 'base64url';
+            const rawValue = formats[currentFormat];
+
+            const text = mode === 'raw' ? rawValue : `${mode}=${rawValue}`;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                const content = card.querySelector('.key-format-content');
+                content.classList.add('copied');
+                setTimeout(() => content.classList.remove('copied'), 1000);
+            } catch {
+                alert('复制失败，请手动选择');
+            }
+        }
+
+        document.getElementById('copyAllBtn').addEventListener('click', async () => {
+            const passwords = Array.from(document.querySelectorAll('.password-text, .key-format-content'))
+                .map(el => el.textContent)
+                .join('\n');
+
+            try {
+                await navigator.clipboard.writeText(passwords);
+                const btn = document.getElementById('copyAllBtn');
+                btn.textContent = '已复制!';
+                setTimeout(() => btn.textContent = '复制全部', 1500);
+            } catch {
+                alert('复制失败，请手动选择');
+            }
+        });
+
+        document.getElementById('exportTxtBtn').addEventListener('click', () => {
+            const passwords = Array.from(document.querySelectorAll('.password-text, .key-format-content'))
+                .map(el => el.textContent)
+                .join('\n');
+
+            const blob = new Blob([passwords], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `passforge-${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        updateStrengthPreview();
         generate();
 
+        document.getElementById('generateBtn').addEventListener('click', generate);
+
         document.getElementById('exitBtn').addEventListener('click', async () => {
-            if (!confirm('确定退出 WeakPass？')) return;
+            if (!confirm('确定退出 PassForge？')) return;
             try {
                 await fetch('/api/shutdown', { method: 'POST' });
             } catch {}
-            document.body.innerHTML = '<div style="text-align:center;padding:100px;color:#666;font-family:monospace"><h2>WeakPass 已退出</h2><p>可以关闭此页面</p></div>';
+            document.body.innerHTML = '<div style="text-align:center;padding:100px;color:#666;font-family:monospace"><h2>PassForge 已退出</h2><p>可以关闭此页面</p></div>';
         });
     </script>
 </body>
